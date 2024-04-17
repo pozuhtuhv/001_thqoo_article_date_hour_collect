@@ -28,7 +28,7 @@ def session1():
     ran = pick_ran()
     page_urls = []
     global p_n
-    for p_n in range(124, 125):  # 스퀘어 게시판을 글 리젠 빠름 123, 790
+    for p_n in range(124, 125):  # 스퀘어 게시판을 글 리젠 빠름 day1, day2 에 해당하는 날짜가 있는 페이지로 지정 
         response = requests.get(f'https://theqoo.net/square?page={p_n}', headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
         for l in range(12, 33):
@@ -63,12 +63,14 @@ def session2(urls):
         article_hour = article_time[1].split(':')[0]
 
         # 시간데이터 다시 확인
-        # print(article_date, article_hour)
+        # print(f"Extracted Date: {article_date}, Hour: {article_hour}")
         
         if article_date in day1:
-            dicHour1[str(int(article_hour))] += 1
+            dicHour1[str(article_hour)] += 1
         elif article_date in day2:
-            dicHour2[str(int(article_hour))] += 1
+            dicHour2[str(article_hour)] += 1
+        else:
+            print(f"Date {article_date} not found in day1 or day2 lists.")
         time.sleep(ran)
         
 
