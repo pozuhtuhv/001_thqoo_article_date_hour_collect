@@ -14,7 +14,6 @@ dicHour2 = {str(i): 0 for i in range(24)} # 주말
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'
 }
-p_n = 0
 
 # time 랜덤
 def pick_ran():
@@ -27,7 +26,6 @@ def pick_ran():
 def session1():
     ran = pick_ran()
     page_urls = []
-    global p_n
     for p_n in range(124, 125):  # 스퀘어 게시판을 글 리젠 빠름 day1, day2 에 해당하는 날짜가 있는 페이지로 지정 
         response = requests.get(f'https://theqoo.net/square?page={p_n}', headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -37,7 +35,6 @@ def session1():
             for post in posts:
                 href = post.get('href')
                 page_urls.append(href)
-            p_n += 1
         time.sleep(ran)
     return page_urls
 
