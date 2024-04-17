@@ -8,8 +8,8 @@ import pandas as pd
 # 날짜 데이터
 day1 = ['04.01', '04.02', '04.03', '04.04', '04.05', '04.08', '04.09', '04.10', '04.11', '04.12']
 day2 = ['04.06', '04.07', '04.13', '04.14']
-dicHour1 = {f"{i:02}": 0 for i in range(24)}
-dicHour2 = {f"{i:02}": 0 for i in range(24)}
+dicHour1 = {f"{i:02}": 0 for i in range(24)} # 평일 데이터 시간 두자리수표시 '00, 01, 02...'
+dicHour2 = {f"{i:02}": 0 for i in range(24)} # 주말 데이터 시간 두자리수표시 '00, 01, 02...'
 
 # requests header
 headers = {
