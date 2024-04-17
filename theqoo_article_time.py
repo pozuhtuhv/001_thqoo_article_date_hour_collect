@@ -3,30 +3,33 @@ from bs4 import BeautifulSoup
 import time
 import random
 import re
+import pandas as pd
 
 # 날짜 데이터
 day1 = ['04.01', '04.02', '04.03', '04.04', '04.05', '04.08', '04.09', '04.10', '04.11', '04.12']
 day2 = ['04.06', '04.07', '04.13', '04.14']
-dicHour1 = {str(i): 0 for i in range(24)} # 평일
-dicHour2 = {str(i): 0 for i in range(24)} # 주말
+dicHour1 = {f"{i:02}": 0 for i in range(24)}
+dicHour2 = {f"{i:02}": 0 for i in range(24)}
 
 # requests header
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'
 }
+p_n = 0
 
 # time 랜덤
 def pick_ran():
     numbers = [2, 3, 4]
     secure_random = random.SystemRandom()  # 시스템 난수 생성기 사용
-    chosen_number = secure_random.choice(numbers) # 
+    chosen_number = secure_random.choice(numbers) 
     return chosen_number
 
 # 게시글 목록과 각 게시글의 URL 수집
 def session1():
     ran = pick_ran()
     page_urls = []
-    for p_n in range(124, 125):  # 스퀘어 게시판을 글 리젠 빠름 day1, day2 에 해당하는 날짜가 있는 페이지로 지정 
+    global p_n
+    for p_n in range(143, 808):  # 스퀘어 게시판을 글 리젠 빠름 143, 808
         response = requests.get(f'https://theqoo.net/square?page={p_n}', headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
         for l in range(12, 33):
@@ -35,6 +38,7 @@ def session1():
             for post in posts:
                 href = post.get('href')
                 page_urls.append(href)
+            p_n += 1
         time.sleep(ran)
     return page_urls
 
@@ -60,7 +64,7 @@ def session2(urls):
         article_hour = article_time[1].split(':')[0]
 
         # 시간데이터 다시 확인
-        # print(f"Extracted Date: {article_date}, Hour: {article_hour}")
+        print(f"Extracted Date: {article_date}, Hour: {article_hour}")
         
         if article_date in day1:
             dicHour1[str(article_hour)] += 1
@@ -75,5 +79,13 @@ urls = session1()
 print(urls)
 session2(urls)
 
-# print(dicHour1)  # 평일결과
-# print(dicHour2)  # 주말결과
+print(dicHour1)  # 평일결과
+print(dicHour2)  # 주말결과
+
+# 판다스 DataFrame 생성
+df = pd.DataFrame({'weekday': dicHour1, 'weekend': dicHour2})
+
+# CSV 파일로 저장
+df.to_csv('output.csv', index_label='Hour')
+
+print('Fin')
