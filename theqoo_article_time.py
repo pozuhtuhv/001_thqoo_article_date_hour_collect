@@ -32,7 +32,7 @@ def session1():
     for p_n in range(143, 808):  # 스퀘어 게시판을 글 리젠 빠름 143, 808
         response = requests.get(f'https://theqoo.net/square?page={p_n}', headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
-        for l in range(12, 33):
+        for l in range(12, 33): # 한페이지 공지제외 게시글 갯수 (공지갯수, + 20)
             # 게시글 목록에서 각 게시글의 URL 추출
             posts = soup.select('#bd_24759_0 > div > table > tbody > tr:nth-child({}) > td.title > a:first-child'.format(l))  # 타이틀 URL 속성 가져오기
             for post in posts:
