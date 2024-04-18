@@ -10,6 +10,7 @@ day1 = ['04.01', '04.02', '04.03', '04.04', '04.05', '04.08', '04.09', '04.10', 
 day2 = ['04.06', '04.07', '04.13', '04.14']
 dicHour1 = {f"{i:02}": 0 for i in range(24)} # 평일 데이터 시간 두자리수표시 '00, 01, 02...'
 dicHour2 = {f"{i:02}": 0 for i in range(24)} # 주말 데이터 시간 두자리수표시 '00, 01, 02...'
+data_accumulate = []
 
 # requests header
 headers = {
@@ -18,7 +19,7 @@ headers = {
 
 # time 랜덤
 def pick_ran():
-    numbers = [2, 3, 4]
+    numbers = [3, 4, 5]
     secure_random = random.SystemRandom()  # 시스템 난수 생성기 사용
     chosen_number = secure_random.choice(numbers) 
     return chosen_number
@@ -27,7 +28,7 @@ def pick_ran():
 def session1():
     ran = pick_ran()
     page_urls = []
-    for p_n in range(143, 808):  # 스퀘어 게시판을 글 리젠 빠름 143, 808
+    for p_n in range(250, 251):  # 스퀘어 게시판을 글 리젠 빠름 143, 808
         response = requests.get(f'https://theqoo.net/square?page={p_n}', headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
         for l in range(12, 33): # 한페이지 공지제외 게시글 갯수 (공지갯수, + 20)
@@ -39,30 +40,47 @@ def session1():
         time.sleep(ran)
     return page_urls
 
-# 게시글 접속 및 시간 데이터 수집
+# 게시글 접속 및 제목, 조회수, 작성시간 데이터 수집
 def session2(urls):
     ran = pick_ran()
     base_url = 'https://theqoo.net'
     for url in urls: # 수집된 urls 횟수만큼 반복
         full_url = f"{base_url}{url}"  # # url은 '/'까지 포함하니 '/' 삭제
-        # # 게시물 접속
+        # 게시물 접속
         response = requests.get(full_url, headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # # 게시물 번호만 추출
+        # 게시물 번호만 추출
         match = re.search(r'/(\d+)\?', full_url)
         article_number = match.group(1)  # 첫 번째 그룹에 해당하는 숫자만 추출
 
-        # # 시간 데이터 가져오기
-        tr = soup.select_one('#bd_24759_{} > div.rd.rd_nav_style2.clear > div.rd_hd.clear > div.board.clear > div > div.side.fr > span'.format(article_number))
+        # 게시물 타이틀 가져오기
+        title = soup.select_one(f'#bd_24759_{article_number} > div.rd.rd_nav_style2.clear > div.rd_hd.clear > div.theqoo_document_header > span').text
+
+        # 시간 데이터 가져오기
+        tr = soup.select_one(f'#bd_24759_{article_number} > div.rd.rd_nav_style2.clear > div.rd_hd.clear > div.board.clear > div > div.side.fr > span')
         article_time = tr.text.split()
         article_date = article_time[0].split('.')[1:3]
         article_date = '.'.join(article_date)
         article_hour = article_time[1].split(':')[0]
 
+        # 조회수, 댓글 데이터 가져오기 # next_sibling 활용
+        view = soup.select_one(f'#bd_24759_{article_number} > div.rd.rd_nav_style2.clear > div.rd_hd.clear > div.theqoo_document_header > div > i.far.fa-eye').next_sibling.strip()
+        comment = soup.select_one(f'#bd_24759_{article_number} > div.rd.rd_nav_style2.clear > div.rd_hd.clear > div.theqoo_document_header > div > i.far.fa-comment-dots').next_sibling.strip()
+
         # 시간데이터 다시 확인
-        print(f"Extracted Date: {article_date}, Hour: {article_hour}")
+        # print(f"Extracted Date: {article_date}, Hour: {article_hour}")
         
+        # 데이터 누적에 저장 
+        data_accumulate.append({
+            'title':  title,
+            'link': full_url,
+            'view': view,
+            'comment': comment,
+            'date': article_time,
+            'Hour': article_hour
+        })
+
         if article_date in day1:
             dicHour1[str(article_hour)] += 1
         elif article_date in day2:
@@ -79,10 +97,16 @@ session2(urls)
 print(dicHour1)  # 평일결과
 print(dicHour2)  # 주말결과
 
-# 판다스 DataFrame 생성
+# 평일 주말 결과 저장
+# 판다스로 수집데이터 데이터프레임설정
 df = pd.DataFrame({'weekday': dicHour1, 'weekend': dicHour2})
-
 # CSV 파일로 저장
-df.to_csv('output.csv', index_label='Hour')
+df.to_csv('articletime.csv', index_label='Hour', encoding='utf-8-sig')
+
+# 수집 게시글 데이터 저장
+# 판다스로 수집데이터 데이터프레임설정
+df = pd.DataFrame(data_accumulate)
+# CSV 파일로 저장 utf-8-sig 인식
+df.to_csv('articleinfo.csv', index=False, encoding='utf-8-sig')
 
 print('Fin')
