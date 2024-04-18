@@ -38,7 +38,7 @@ def fetch_data(url, headers):
         except (requests.ConnectionError, requests.Timeout):
             print("Connection error or timeout, checking connection...")
             wait_for_internet_connection()
-            return fetch_data(url, headers)  # 진행중인 주소 다시 시도
+            return fetch_data(url, headers)  # 재귀적으로 다시 시도
         except requests.HTTPError as e:
             if e.response.status_code == 404:
                 print(f"404 Not Found Error for URL: {url}")
@@ -48,7 +48,7 @@ def fetch_data(url, headers):
 
 # time 랜덤
 def pick_ran():
-    numbers = [3, 4, 5]
+    numbers = [3.5, 4, 5]
     secure_random = random.SystemRandom()  # 시스템 난수 생성기 사용
     chosen_number = secure_random.choice(numbers) 
     return chosen_number
@@ -57,7 +57,7 @@ def pick_ran():
 def session1():
     ran = pick_ran()
     page_urls = []
-    for p_n in range(194, 856):  # 스퀘어 게시판을 글 리젠 빠름 143, 808
+    for p_n in range(205, 866):  # 스퀘어 게시판을 글 리젠 빠름 143, 808
         response = fetch_data(f'https://theqoo.net/square?page={p_n}', headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
         for l in range(12, 33): # 한페이지 공지제외 게시글 갯수 (공지갯수, + 20)
@@ -86,7 +86,8 @@ def session2(urls):
         match = re.search(r'/(\d+)\?', full_url)
         article_number = match.group(1)  # 첫 번째 그룹에 해당하는 숫자만 추출
 
-        if article_number: # 존재할경우 
+        if article_number: # 존재할경우
+            cate = soup.select_one(f'#bd_24759_{article_number} > div.rd.rd_nav_style2.clear > div.rd_hd.clear > div.theqoo_document_header > strong').text
             # 타이틀
             title = soup.select_one(f'#bd_24759_{article_number} > div.rd.rd_nav_style2.clear > div.rd_hd.clear > div.theqoo_document_header > span').text
             # 시간 데이터
@@ -104,6 +105,7 @@ def session2(urls):
             
             # 데이터 누적에 저장 
             data_accumulate.append({
+                'cate': cate,
                 'title':  title,
                 'link': full_url,
                 'view': view,
